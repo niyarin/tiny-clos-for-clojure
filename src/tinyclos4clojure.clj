@@ -44,7 +44,8 @@
             (ref-set instance-list (assoc @instance-list res field))
             res)
          ))
-
+      
+      ;fieldのclass部(2番目)に自身をセット
       (defn %set-instance-class-to-self! [closure]
          (let [field (get-field closure)]
                (ref-set field (assoc @field 2 closure))))
@@ -59,7 +60,9 @@
          (@(get-field closure) (+ index 3)))
 
       (defn %instance-set! [closure index new-value]
-         (ref-set (get-field closure) (+ index 3) new-value)))
+         (let [field (get-field closure)]
+            (ref-set field (assoc @field (+ index 3) new-value)))))
+
 
 (defn %allocate-instance [class-data nfields]
    (%allocate-instance-internal 
@@ -67,6 +70,10 @@
       true
       (fn [& args] (throw (ex-info "ERROR" {})))
       nfields))
+
+
+(def slots-of-class 
+   '(direct-supers direct-slots cpl slots nfields field-initializers getters-n-setters))
 
 ;<class>用のgetter/setterリスト
 (def getters-n-setters-for-class
@@ -83,11 +90,6 @@
       {}
       slots-of-class))
 
-
-(def slots-of-class 
-   '(direct-supers direct-slots cpl slots nfields field-initializers getters-n-setters))
-
 (def <class> (%allocate-instance false (count slots-of-class)))
 (dosync 
    (%set-instance-class-to-self! <class>))
-
