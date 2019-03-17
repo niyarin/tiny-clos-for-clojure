@@ -1,5 +1,3 @@
-
-
 ;Tiny Closのコピーライト↓
 
 ; Tiny CLOS copyright
@@ -25,4 +23,41 @@
 ; **********************************************************************
 
 (ns niyarin.tiny-clos)
+
+(let* [instance-list (ref (hash-map))
+       get-field ;refを返す
+          (fn [closure] 
+             (let [cell (@instance-list closure)]
+                (and cell)))]
+
+   (defn %allocate-instance-internal
+      [class-data lock proc nfields]
+      (let* [field 
+                (ref
+                  (apply 
+                     vector 
+                     (concat 
+                        (list proc lock class-data)
+                        (repeat nfields false))))
+             res (fn [& args] (apply (@field 0) args))]
+         (dosync
+            (ref-set instance-list (assoc @instance-list res field))
+            res)
+         ))
+
+      (defn %set-instance-class-to-self! [closure]
+         (let [field (get-field closure)]
+               (ref-set field (assoc @field 2 closure))))
+
+      (defn %instance? [object] (get-field object))
+
+      (defn %instance-class [closure] 
+         (let [field (get-field closure)]
+            (field 2)))
+
+      (defn %instance-ref [closure index]
+         (@(get-field closure) (+ index 3)))
+
+      (defn %instance-set! [closure index new-value]
+         (ref-set (get-field closure) (+ index 3) new-value)))
 
