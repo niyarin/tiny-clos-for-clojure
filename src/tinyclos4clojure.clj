@@ -69,6 +69,10 @@
       nfields))
 
 
+(def slots-of-class 
+   '(direct-supers direct-slots cpl slots nfields field-initializers getters-n-setters))
+
 (def <class> (%allocate-instance false (count slots-of-class)))
 (dosync 
    (%set-instance-class-to-self! <class>))
+
