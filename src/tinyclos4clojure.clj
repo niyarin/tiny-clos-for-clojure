@@ -68,6 +68,21 @@
       (fn [& args] (throw (ex-info "ERROR" {})))
       nfields))
 
+;<class>用のgetter/setterリスト
+(def getters-n-setters-for-class
+   (reduce
+      (fn [left slot-name]
+         (assoc left 
+                slot-name 
+                (let [slot-index (.indexOf slots-of-class slot-name)]
+                  (if (= slot-index -1)
+                      (throw (ex-info "ERROR" {}))
+                      (list 
+                        (fn [object] (%instance-ref object slot-index));getter
+                        (fn [object new-value] (%instance-set! object slot-index new-value)))))))
+      {}
+      slots-of-class))
+
 
 (def slots-of-class 
    '(direct-supers direct-slots cpl slots nfields field-initializers getters-n-setters))
