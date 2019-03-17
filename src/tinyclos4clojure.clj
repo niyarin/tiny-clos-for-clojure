@@ -67,3 +67,8 @@
       true
       (fn [& args] (throw (ex-info "ERROR" {})))
       nfields))
+
+
+(def <class> (%allocate-instance false (count slots-of-class)))
+(dosync 
+   (%set-instance-class-to-self! <class>))
