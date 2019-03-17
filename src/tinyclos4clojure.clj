@@ -61,3 +61,9 @@
       (defn %instance-set! [closure index new-value]
          (ref-set (get-field closure) (+ index 3) new-value)))
 
+(defn %allocate-instance [class-data nfields]
+   (%allocate-instance-internal 
+      class-data
+      true
+      (fn [& args] (throw (ex-info "ERROR" {})))
+      nfields))
