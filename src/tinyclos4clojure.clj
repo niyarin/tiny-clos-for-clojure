@@ -82,7 +82,7 @@
    (reduce
       (fn [left slot-name]
          (assoc left 
-                slot-name 
+                slot-name
                 (let [slot-index (.indexOf slots-of-class slot-name)]
                   (if (= slot-index -1)
                       (throw (ex-info "ERROR" {}))
@@ -136,3 +136,64 @@
 (defn class-class-priority-list [class-object]
   (slot-ref class-object 'class-priority-list))
 
+
+(defn make-class-based-object [args]
+   (let* [new-object (%allocate-instance <class> (count slots-of-class))
+          direct-supers (args 'direct-supers)
+          direct-slots (map list (args 'direct-slots))]
+
+      (let* [class-priority-list (reverse direct-supers);TODO:あとで
+             slots
+               (apply
+                 concat
+                 (cons direct-slots
+                       (map class-direct-slots (next class-priority-list))))
+             nfields (ref 0)
+             field-initializers (ref '())
+             allocator
+                (fn [init]
+                  (let [f nfields]
+                    (dosync
+                      (ref-set nfields (+ @nfields 1))
+                      (ref-set field-initializers (cons init @field-initializers)))
+                    (list (fn [o] (%instance-ref o f))
+                          (fn [o n] (%instance-set! o f n)))))
+              getters-n-setters
+                (reduce
+                  (fn [left slot-name]
+                    (assoc left
+                           slot-name
+                           (cons (first slot-name) (allocator (fn [] '())))))
+                  {}
+                  slots)]
+         (dosync
+           (slot-set! new-object 'direct-supers direct-supers)
+           (slot-set! new-object 'direct-slots direct-slots)
+           (slot-set! new-object 'class-priority-list class-priority-list)
+           (slot-set! new-object 'slots slots)
+           (slot-set! new-object 'nfields 0)
+           (slot-set! new-object 'field-initializers (reverse @field-initializers))
+           (slot-set! new-object 'getters-n-setters getters-n-setters))
+         new-object)))
+
+(def <top>
+  (make-class-based-object
+    {'direct-supres '()
+     'direct-slots '()}))
+
+(def <object>
+  (make-class-based-object
+    {'direct-supers (list <top>)
+     'direct-slots '()}))
+
+(dosync
+    (slot-set! <class> 'direct-supers (list <object>))
+    (slot-set! <class> 'direct-slots (map list slots-of-class))
+    (slot-set! <class> 'class-priority-list (list <class> <object> <top>))
+    (slot-set! <class> 'slots (map list slots-of-class))
+    (slot-set! <class> 'nfields (count slots-of-class))
+    (slot-set! <class> 'field-initializers
+               (map
+                    (fn [s] (fn [] '()))
+                    slots-of-class))
+    (slot-set! <class> 'getters-n-setters '()))
