@@ -106,8 +106,18 @@
            entry
            (throw (ex-info (str "ERROR:not found slot " slot-name " .") {}))))))
 
+(defn class-of [object]
+  (cond 
+    (%instance? object) (%instance-class object)
+    :else 'ATODE));TODO
+
 (defn slot-ref [object slot-name]
-  (let* [ info (lookup-slot-info (class-of object) slot-name)
-          getter (first info 0)]
+  (let* [info (lookup-slot-info (class-of object) slot-name)
+         getter (first info)]
     (getter object)))
+
+(defn slot-set! [object slot-name new-value]
+  (let* [info (lookup-slot-info (class-of object) slot-name)
+         setter (second info)]
+    (setter object new-value)))
 
