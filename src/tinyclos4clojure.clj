@@ -93,3 +93,21 @@
 (def <class> (%allocate-instance false (count slots-of-class)))
 (dosync 
    (%set-instance-class-to-self! <class>))
+
+(declare slot-ref)
+(defn lookup-slot-info [class-data slot-name]
+   (let [getter-n-setters
+         (if (= class-data <class>)
+            getters-n-setters-for-class
+            (slot-ref class 'geters-n-setters)
+            )]
+      (let [entry (getter-n-setters slot-name)]
+         (if entry
+           entry
+           (throw (ex-info (str "ERROR:not found slot " slot-name " .") {}))))))
+
+(defn slot-ref [object slot-name]
+  (let* [ info (lookup-slot-info (class-of object) slot-name)
+          getter (first info 0)]
+    (getter object)))
+
