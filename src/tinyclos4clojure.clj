@@ -22,7 +22,9 @@
 ; OF THE POSSIBILITY OF SUCH DAMAGES.
 ; **********************************************************************
 
-(ns niyarin.tiny-clos)
+(ns niyarin.tiny-clos
+   (:require clojure.pprint);for test
+  )
 
 (let* [instance-list (ref (hash-map))
        get-field ;refを返す
@@ -73,7 +75,7 @@
 
 
 (def slots-of-class 
-   '(direct-supers direct-slots cpl slots nfields field-initializers getters-n-setters))
+   '(direct-supers direct-slots class-priority-list slots nfields field-initializers getters-n-setters))
 
 ;<class>用のgetter/setterリスト
 (def getters-n-setters-for-class
@@ -120,4 +122,17 @@
   (let* [info (lookup-slot-info (class-of object) slot-name)
          setter (second info)]
     (setter object new-value)))
+
+;<class> refs
+(defn class-direct-slots [class-object]
+  (slot-ref class-object 'direct-slots))
+
+(defn class-direct-supers [class-object]
+  (slot-ref class-object 'direct-supers))
+
+(defn class-slots [class-object]
+  (slot-ref class-object 'slots))
+ 
+(defn class-class-priority-list [class-object]
+  (slot-ref class-object 'class-priority-list))
 
