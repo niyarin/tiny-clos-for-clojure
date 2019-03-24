@@ -65,6 +65,12 @@
          (let [field (get-field closure)]
             (ref-set field (assoc @field (+ index 3) new-value)))))
 
+(let* [entites (ref hash-map)
+       get-entity
+         (fn [closure]
+            (let [entity (entites closure)]
+               (and entity)))]
+   )
 
 (defn %allocate-instance [class-data nfields]
    (%allocate-instance-internal 
@@ -197,3 +203,29 @@
                     (fn [s] (fn [] '()))
                     slots-of-class))
     (slot-set! <class> 'getters-n-setters '()))
+
+(def <procedure-class>
+   (make-class-based-object
+      {'direct-supers (list <class>)
+       'direct-slots (list)}))
+
+(def <entity-class>
+   (make-class-based-object
+      {'direct-supers (list <procedure-class>)
+       'direct-slots (list)}))
+
+(def <generic>
+   (make-class-based-object
+      {'direct-supers (list <entity-class>)
+       'direct-slots (list 'methods)}))
+
+(def <method>
+   (make-class-based-object
+      {'direct-supers (list <object>)
+       'direct-slots (list 'specializers 'procedure )}))
+
+
+(defn make-class [direct-supers direct-slots]
+   (make-class-based-object
+      {'direct-supers direct-supers
+       'direct-slots direct-slots}))
